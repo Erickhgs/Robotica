@@ -1,0 +1,17 @@
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/launch/gazebo.launch.py
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/launch/__pycache__/gazebo.launch.cpython-310.pyc
+/home/henry/Documents/robotica/install/my_robot_pkg/share/ament_index/resource_index/package_run_dependencies/my_robot_pkg
+/home/henry/Documents/robotica/install/my_robot_pkg/share/ament_index/resource_index/parent_prefix_path/my_robot_pkg
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/environment/ament_prefix_path.sh
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/environment/ament_prefix_path.dsv
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/environment/path.sh
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/environment/path.dsv
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/local_setup.bash
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/local_setup.sh
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/local_setup.zsh
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/local_setup.dsv
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/package.dsv
+/home/henry/Documents/robotica/install/my_robot_pkg/share/ament_index/resource_index/packages/my_robot_pkg
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/cmake/my_robot_pkgConfig.cmake
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/cmake/my_robot_pkgConfig-version.cmake
+/home/henry/Documents/robotica/install/my_robot_pkg/share/my_robot_pkg/package.xml

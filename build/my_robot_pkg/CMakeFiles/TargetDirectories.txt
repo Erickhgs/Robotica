@@ -1,0 +1,9 @@
+/home/henry/Documents/robotica/build/my_robot_pkg/CMakeFiles/uninstall.dir
+/home/henry/Documents/robotica/build/my_robot_pkg/CMakeFiles/my_robot_pkg_uninstall.dir
+/home/henry/Documents/robotica/build/my_robot_pkg/CMakeFiles/test.dir
+/home/henry/Documents/robotica/build/my_robot_pkg/CMakeFiles/edit_cache.dir
+/home/henry/Documents/robotica/build/my_robot_pkg/CMakeFiles/rebuild_cache.dir
+/home/henry/Documents/robotica/build/my_robot_pkg/CMakeFiles/list_install_components.dir
+/home/henry/Documents/robotica/build/my_robot_pkg/CMakeFiles/install.dir
+/home/henry/Documents/robotica/build/my_robot_pkg/CMakeFiles/install/local.dir
+/home/henry/Documents/robotica/build/my_robot_pkg/CMakeFiles/install/strip.dir
