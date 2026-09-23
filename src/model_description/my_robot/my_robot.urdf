@@ -1,0 +1,205 @@
+<robot name="my_robot">
+
+  <link name="chassis">
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="5.0"/>
+      <inertia
+        ixx="0.02083"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.07083"
+        iyz="0.0"
+        izz="0.08333"/>
+    </inertial>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.4 0.2 0.1"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <geometry>
+        <mesh
+          filename="file:///home/erick/ros2_ws/install/my_robot_pkg/share/my_robot_pkg/model_description/pioneer2dx/meshes/chassis.dae"
+          scale="0.9 0.5 0.5"/>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="-0.15 0 -0.05" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="-0.15 0 -0.05" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+    </visual>
+
+  </link>
+
+
+  <link name="left_wheel">
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia
+        ixx="0.001354"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.0025"
+        iyz="0.0"
+        izz="0.001354"/>
+    </inertial>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </visual>
+
+  </link>
+
+
+  <link name="right_wheel">
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia
+        ixx="0.001354"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.0025"
+        iyz="0.0"
+        izz="0.001354"/>
+    </inertial>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </visual>
+
+  </link>
+
+
+  <joint name="left_wheel_hinge" type="continuous">
+    <parent link="chassis"/>
+    <child link="left_wheel"/>
+    <origin xyz="0.1 0.13 0" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <dynamics damping="0.1" friction="0.0"/>
+  </joint>
+
+
+  <joint name="right_wheel_hinge" type="continuous">
+    <parent link="chassis"/>
+    <child link="right_wheel"/>
+    <origin xyz="0.1 -0.13 0" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <dynamics damping="0.1" friction="0.0"/>
+  </joint>
+
+  <gazebo reference="chassis">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+
+  <gazebo reference="left_wheel">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+
+  <gazebo reference="right_wheel">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+
+
+  <ros2_control name="GazeboSystem" type="system">
+
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+
+    <joint name="left_wheel_hinge">
+
+      <command_interface name="velocity">
+        <param name="min">-20.0</param>
+        <param name="max">20.0</param>
+      </command_interface>
+
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+
+    </joint>
+
+    <joint name="right_wheel_hinge">
+
+      <command_interface name="velocity">
+        <param name="min">-20.0</param>
+        <param name="max">20.0</param>
+      </command_interface>
+
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+
+    </joint>
+
+  </ros2_control>
+
+
+  <gazebo>
+
+    <plugin
+      filename="libgazebo_ros2_control.so"
+      name="gazebo_ros2_control">
+
+      <robot_param>robot_description</robot_param>
+      <robot_param_node>robot_state_publisher</robot_param_node>
+
+      <parameters>/home/erick/ros2_ws/install/my_robot_pkg/share/my_robot_pkg/config/controllers.yaml</parameters>
+
+      <ros>
+
+        <remapping>
+          /diff_drive_controller/cmd_vel_unstamped:=/cmd_vel
+        </remapping>
+
+        <remapping>
+          /diff_drive_controller/odom:=/odom
+        </remapping>
+
+      </ros>
+
+    </plugin>
+
+  </gazebo>
+
+</robot>

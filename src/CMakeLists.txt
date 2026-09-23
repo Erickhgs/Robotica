@@ -10,6 +10,8 @@ find_package(ament_cmake REQUIRED)
 # Instala a pasta de launch para ficar acessível no ROS 2
 install(DIRECTORY
   launch
+  config
+  model_description
   DESTINATION share/${PROJECT_NAME}
 )
 
