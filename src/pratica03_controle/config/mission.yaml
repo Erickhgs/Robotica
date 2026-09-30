@@ -1,0 +1,13 @@
+mission_executor:
+  ros__parameters:
+    frame_id: odom
+    odom_timeout: 0.5
+    position_tolerance: 0.04
+    yaw_tolerance: 0.06
+    dwell_time: 0.5
+    # Arrays separados porque parâmetros ROS 2 não aceitam listas de dicionários.
+    # x/y em metros; yaw em radianos. Pelo menos 3 entradas em cada array.
+    waypoints:
+      x: [1.0, 1.0, 0.0, 0.0]
+      y: [0.0, 1.0, 1.0, 0.0]
+      yaw: [0.0, 1.57079632679, 3.14159265359, 0.0]

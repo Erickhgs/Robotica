@@ -6,7 +6,7 @@ from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
-    model_path = os.path.expanduser('~/Documents/robotica/src/model_description/model.sdf')
+    model_path = os.path.expanduser('~/home/erick/Robotica/src/robot_description/model_description/model.sdf')
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(

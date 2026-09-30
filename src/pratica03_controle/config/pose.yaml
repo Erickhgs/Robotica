@@ -1,0 +1,15 @@
+pose_controller:
+  ros__parameters:
+    method: continuous  # continuous ou three_maneuvers
+    control_rate: 20.0
+    odom_timeout: 0.5
+    frame_id: odom
+    max_linear_speed: 0.8
+    max_angular_speed: 2.0
+    position_tolerance: 0.04
+    yaw_tolerance: 0.06
+    pid:
+      distance: {kp: 0.8, ki: 0.0, kd: 0.0}
+      heading: {kp: 2.8, ki: 0.0, kd: 0.0}
+      final_heading: {kp: 2.0, ki: 0.0, kd: 0.0}
+      beta: {kp: 0.8, ki: 0.0, kd: 0.0}

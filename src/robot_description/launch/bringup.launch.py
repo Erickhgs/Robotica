@@ -57,13 +57,13 @@ def generate_launch_description():
         output='screen'
     )
 
-    teleop = Node(
-        package='teleop_twist_keyboard',
-        executable='teleop_twist_keyboard',
-        name='teleop_twist_keyboard',
-        prefix='xterm -e',
-        output='screen'
-    )
+    # teleop = Node(
+    #     package='teleop_twist_keyboard',
+    #     executable='teleop_twist_keyboard',
+    #     name='teleop_twist_keyboard',
+    #     prefix='xterm -e',
+    #     output='screen'
+    # )
 
 
     return LaunchDescription([
@@ -82,13 +82,13 @@ def generate_launch_description():
             actions=[
                 diff_drive_controller
             ]
-        ),
-
-        TimerAction(
-            period=8.0,
-            actions=[
-                teleop
-            ]
         )
+
+        # TimerAction(
+        #     period=8.0,
+        #     actions=[
+        #         teleop
+        #     ]
+        # )
 
     ])

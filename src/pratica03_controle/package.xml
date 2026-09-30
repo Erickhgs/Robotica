@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>pratica03_controle</name>
+  <version>1.0.0</version>
+  <description>Prática 03: pose, missão, trajetória em oito e avaliação de RMSE.</description>
+  <maintainer email="maintainer@example.com">Equipe da prática</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <!-- simple-pid é instalado por pip conforme requirements.txt e README. -->
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>python3-yaml</test_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>
