@@ -1,0 +1,11 @@
+kinematic_sim:
+  ros__parameters:
+    rate: 100.0
+    frame_id: odom
+    base_frame_id: chassis
+    initial: {x: 0.0, y: 0.0, yaw: 0.0}
+    max_linear_speed: 0.8
+    max_angular_speed: 2.0
+    command_timeout: 0.5
+    linear_scale: 1.0
+    angular_scale: 1.0
