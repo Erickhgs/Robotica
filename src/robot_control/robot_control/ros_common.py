@@ -81,7 +81,8 @@ class MotionNode(Node):
         self.odom_received = None
         self.last_tick = None
         self.telemetry = None
-        self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', qos_profile_sensor_data)
+        # O diff_drive_controller recebe comandos com QoS reliable.
+        self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
         self.odom_sub = self.create_subscription(
             Odometry, 'odom', self.on_odom, qos_profile_sensor_data)
 

@@ -1,0 +1,95 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Global Options:
+    Fixed Frame: map
+    Background Color: 35; 38; 45
+    Frame Rate: 30
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Plane Cell Count: 20
+      Cell Size: 1
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+        Durability Policy: Transient Local
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+        Depth: 1
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Show Names: true
+      Show Axes: true
+      Marker Scale: 0.3
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Lidar 2D frontal
+      Enabled: true
+      Topic:
+        Value: /lidar/points
+        Reliability Policy: Best Effort
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 5
+      Style: Points
+      Size (Pixels): 4
+      Position Transformer: XYZ
+      Color Transformer: FlatColor
+      Color: 255; 80; 60
+      Decay Time: 0
+    - Class: rviz_default_plugins/Image
+      Name: Camera RGB
+      Enabled: true
+      Topic:
+        Value: /camera/image_raw
+        Reliability Policy: Best Effort
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 5
+    - Class: rviz_default_plugins/Path
+      Name: Referencia
+      Enabled: true
+      Topic:
+        Value: /tracking/reference_path
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        Depth: 5
+      Color: 70; 220; 100
+      Line Style: Lines
+    - Class: rviz_default_plugins/Path
+      Name: Pose GPS e IMU
+      Enabled: true
+      Topic:
+        Value: /tracking/actual_path
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        Depth: 5
+      Color: 255; 190; 50
+      Line Style: Lines
+    - Class: rviz_default_plugins/Path
+      Name: Trajetoria real Gazebo
+      Enabled: true
+      Topic:
+        Value: /evaluation/ground_truth_path
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        Depth: 5
+      Color: 70; 160; 255
+      Line Style: Lines
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 10
+      Pitch: 1.1
+      Yaw: 0.7
+      Focal Point: {X: 0, Y: 0, Z: 0}
+Window Geometry:
+  Width: 1280
+  Height: 800

@@ -1,0 +1,51 @@
+# Pratica 04: spawn em (0, 0, atan2(4,1)); GPS ruidoso nao exige alinhamento fino.
+figure_eight:
+  ros__parameters:
+    control_rate: 20.0
+    odom_timeout: 0.5
+    frame_id: map
+    mode: feedback
+    Kff: 1.0
+    trajectory:
+      A: 1.0
+      B: 2.0
+      omega: 0.1
+      center_x: 0.0
+      center_y: 0.0
+      cycles: 1
+    max_linear_speed: 0.8
+    max_angular_speed: 2.0
+    lookahead_distance: 0.15
+    pid:
+      x:
+        kp: 1.8
+        ki: 0.0
+        kd: 0.0
+      y:
+        kp: 1.8
+        ki: 0.0
+        kd: 0.0
+    align_start: false
+    settle_time: 1.0
+    alignment:
+      method: continuous
+      timeout: 120.0
+      position_tolerance: 0.015
+      yaw_tolerance: 0.015
+      pid:
+        distance:
+          kp: 0.8
+          ki: 0.0
+          kd: 0.0
+        heading:
+          kp: 2.8
+          ki: 0.0
+          kd: 0.0
+        final_heading:
+          kp: 2.0
+          ki: 0.0
+          kd: 0.0
+        beta:
+          kp: 0.8
+          ki: 0.0
+          kd: 0.0

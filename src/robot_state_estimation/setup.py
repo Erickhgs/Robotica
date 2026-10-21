@@ -20,5 +20,7 @@ setup(
     description='Localização e estimação de estado do robô',
     license='MIT',
     tests_require=['pytest'],
-    entry_points={'console_scripts': []},
+    entry_points={'console_scripts': [
+        'sensor_pose = robot_state_estimation.sensor_pose_node:main',
+    ]},
 )

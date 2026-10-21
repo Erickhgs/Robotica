@@ -8,6 +8,8 @@ install(DIRECTORY
   launch
   models
   urdf
+  worlds
+  rviz
   DESTINATION share/${PROJECT_NAME}
 )
 

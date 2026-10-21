@@ -1,0 +1,10 @@
+sensor_pose:
+  ros__parameters:
+    # Deve coincidir com sensors.world. Nao recalibrar entre ensaios.
+    origin_latitude: -8.05
+    origin_longitude: -34.9
+    origin_altitude: 0.0
+    yaw_noise_stddev: 0.01
+    max_sensor_age: 0.3
+    max_sensor_skew: 0.1
+    base_height: 0.1

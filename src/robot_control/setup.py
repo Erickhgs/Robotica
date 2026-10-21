@@ -26,5 +26,7 @@ setup(
         'figure_eight = robot_control.trajectory_node:main',
         'kinematic_sim = robot_control.simulator_node:main',
         'analyze_results = robot_control.analyze:main',
+        'ground_truth_recorder = robot_control.ground_truth_node:main',
+        'analyze_sensors = robot_control.analyze_sensors:main',
     ]},
 )

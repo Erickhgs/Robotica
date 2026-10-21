@@ -1,6 +1,15 @@
 <?xml version="1.0"?>
 <robot name="my_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <xacro:arg name="sensors" default="false"/>
+  <xacro:arg name="noise_scale" default="1.0"/>
+  <xacro:arg name="wheel_axis_y" default="-1"/>
+  <xacro:arg name="controllers_file" default="$(find robot_description)/config/controllers.yaml"/>
+  <xacro:include filename="sensors.xacro"/>
+  <xacro:if value="$(arg sensors)">
+    <xacro:practice04_sensors noise_scale="$(arg noise_scale)"/>
+  </xacro:if>
+
   <link name="chassis">
 
     <inertial>
@@ -114,7 +123,7 @@
     <parent link="chassis"/>
     <child link="left_wheel"/>
     <origin xyz="0.1 0.13 0" rpy="0 0 0"/>
-    <axis xyz="0 -1 0"/>
+    <axis xyz="0 $(arg wheel_axis_y) 0"/>
     <dynamics damping="0.1" friction="0.0"/>
   </joint>
 
@@ -123,7 +132,7 @@
     <parent link="chassis"/>
     <child link="right_wheel"/>
     <origin xyz="0.1 -0.13 0" rpy="0 0 0"/>
-    <axis xyz="0 -1 0"/>
+    <axis xyz="0 $(arg wheel_axis_y) 0"/>
     <dynamics damping="0.1" friction="0.0"/>
   </joint>
 
@@ -185,7 +194,7 @@
       <robot_param>robot_description</robot_param>
       <robot_param_node>robot_state_publisher</robot_param_node>
 
-      <parameters>$(find robot_description)/config/controllers.yaml</parameters>
+      <parameters>$(arg controllers_file)</parameters>
 
       <ros>
 

@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Gazebo Classic 11 / gazebo_plugins ROS 2. Desvios, nao variancias. -->
+  <xacro:macro name="gaussian" params="sigma">
+    <noise type="gaussian"><mean>0.0</mean><stddev>${sigma}</stddev></noise>
+  </xacro:macro>
+  <xacro:macro name="sensor_mesh" params="name xyz">
+    <link name="${name}">
+      <inertial>
+        <mass value="0.02"/>
+        <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+      </inertial>
+      <visual>
+        <geometry>
+          <mesh filename="file://$(find robot_description)/models/sensors/meshes/${name}.dae"/>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="${name}_joint" type="fixed">
+      <parent link="chassis"/><child link="${name}"/><origin xyz="${xyz}"/>
+    </joint>
+    <!-- Mantem o sensor no link correto ao converter URDF para SDF. -->
+    <gazebo reference="${name}_joint"><preserveFixedJoint>true</preserveFixedJoint></gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="practice04_sensors" params="noise_scale">
+    <xacro:property name="s" value="${float(noise_scale)}"/>
+    <xacro:sensor_mesh name="imu_link" xyz="-0.08 0 0.087"/>
+    <!-- GPS exatamente acima da origem: deslocamento XY nulo. -->
+    <xacro:sensor_mesh name="gps_link" xyz="0 0 0.096"/>
+    <xacro:sensor_mesh name="camera_link" xyz="0.22 0 0.080"/>
+    <link name="camera_optical_frame"/>
+    <joint name="camera_optical_joint" type="fixed">
+      <parent link="camera_link"/><child link="camera_optical_frame"/>
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
+    <link name="lidar_link">
+      <inertial>
+        <mass value="0.05"/>
+        <inertia ixx="0.00002" ixy="0" ixz="0" iyy="0.00002" iyz="0" izz="0.00004"/>
+      </inertial>
+      <visual>
+        <geometry>
+          <mesh filename="file://$(find robot_description)/models/sensors/meshes/lidar_link.dae"/>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="lidar_joint" type="fixed">
+      <parent link="chassis"/><child link="lidar_link"/><origin xyz="0.17 0 0.104"/>
+    </joint>
+    <gazebo reference="lidar_joint"><preserveFixedJoint>true</preserveFixedJoint></gazebo>
+    <!-- As cores e texturas estao nos DAE. Nao sobrescrever com Gazebo/Color. -->
+
+    <gazebo reference="imu_link">
+      <sensor name="imu" type="imu">
+        <always_on>true</always_on><update_rate>100</update_rate>
+        <imu>
+          <angular_velocity>
+            <x><xacro:gaussian sigma="${0.002*s}"/></x>
+            <y><xacro:gaussian sigma="${0.002*s}"/></y>
+            <z><xacro:gaussian sigma="${0.002*s}"/></z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x><xacro:gaussian sigma="${0.02*s}"/></x>
+            <y><xacro:gaussian sigma="${0.02*s}"/></y>
+            <z><xacro:gaussian sigma="${0.02*s}"/></z>
+          </linear_acceleration>
+        </imu>
+        <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+          <ros><remapping>~/out:=/imu/raw</remapping></ros>
+          <frame_name>imu_link</frame_name>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <gazebo reference="gps_link">
+      <sensor name="gps" type="gps">
+        <always_on>true</always_on><update_rate>20</update_rate>
+        <gps>
+          <position_sensing>
+            <horizontal><xacro:gaussian sigma="${0.02*s}"/></horizontal>
+            <vertical><xacro:gaussian sigma="${0.04*s}"/></vertical>
+          </position_sensing>
+        </gps>
+        <plugin name="gps_plugin" filename="libgazebo_ros_gps_sensor.so">
+          <ros><remapping>~/out:=/gps/fix</remapping></ros>
+          <frame_name>gps_link</frame_name>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <gazebo reference="camera_link">
+      <sensor name="camera" type="camera">
+        <always_on>true</always_on><update_rate>15</update_rate>
+        <camera>
+          <horizontal_fov>1.0472</horizontal_fov>
+          <image><width>640</width><height>480</height><format>R8G8B8</format></image>
+          <clip><near>0.05</near><far>30.0</far></clip>
+          <xacro:gaussian sigma="${0.007*s}"/>
+        </camera>
+        <plugin name="camera_plugin" filename="libgazebo_ros_camera.so">
+          <ros>
+            <remapping>camera/image_raw:=/camera/image_raw</remapping>
+            <remapping>camera/camera_info:=/camera/camera_info</remapping>
+          </ros>
+          <camera_name>camera</camera_name>
+          <frame_name>camera_optical_frame</frame_name>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <gazebo reference="lidar_link">
+      <sensor name="lidar" type="ray">
+        <always_on>true</always_on><visualize>false</visualize><update_rate>15</update_rate>
+        <ray>
+          <scan><horizontal>
+            <samples>361</samples><resolution>1</resolution>
+            <min_angle>${-pi/2}</min_angle><max_angle>${pi/2}</max_angle>
+          </horizontal></scan>
+          <range><min>0.08</min><max>12.0</max><resolution>0.01</resolution></range>
+          <xacro:gaussian sigma="${0.01*s}"/>
+        </ray>
+        <plugin name="lidar_plugin" filename="libgazebo_ros_ray_sensor.so">
+          <ros><remapping>~/out:=/lidar/points</remapping></ros>
+          <output_type>sensor_msgs/PointCloud2</output_type><frame_name>lidar_link</frame_name>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <!-- Referencia independente; nao entra no estimador nem no controlador. -->
+    <gazebo>
+      <plugin name="ground_truth" filename="libgazebo_ros_p3d.so">
+        <ros><remapping>odom:=/ground_truth/odom</remapping></ros>
+        <body_name>chassis</body_name><frame_name>world</frame_name>
+        <update_rate>50.0</update_rate><gaussian_noise>0.0</gaussian_noise>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+</robot>
