@@ -16,6 +16,14 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
+def after_exit(next_actions, reason='Falha ao ativar os controladores.'):
+    def callback(event, _context):
+        if event.returncode != 0:
+            return [LogInfo(msg=reason), EmitEvent(event=Shutdown(reason=reason))]
+        return next_actions
+    return callback
+
+
 def build_nodes(context):
     def arg(name):
         return LaunchConfiguration(name).perform(context)
@@ -24,9 +32,13 @@ def build_nodes(context):
         if value not in ('true', 'false'):
             raise ValueError(f'{name}: use true ou false.')
         return value == 'true'
-    noise, task = arg('noise'), arg('task')
+    noise, task, source = arg('noise'), arg('task'), arg('pose_source')
     if noise not in ('zero', 'low', 'high') or task not in ('sensors', 'eight'):
         raise ValueError('noise=zero|low|high; task=sensors|eight')
+    if source not in ('raw', 'filtered'):
+        raise ValueError('pose_source=raw|filtered')
+    filtered = source == 'filtered'
+    odom = '/odometry/filtered' if filtered else '/localization/odom'
     scale = {'zero': 0.0, 'low': 1.0, 'high': 8.0}[noise]
     omega, cycles, seed = float(arg('omega')), int(arg('cycles')), int(arg('seed'))
     if not math.isfinite(omega) or omega <= 0 or cycles < 1 or seed < 0:
@@ -47,8 +59,22 @@ def build_nodes(context):
         }.items()),
         Node(package='robot_state_estimation', executable='sensor_pose', name='sensor_pose',
              parameters=[str(est/'config/sensors.yaml'), common,
-                         {'noise_scale': scale, 'random_seed': seed}], output='screen'),
+                         {'noise_scale': scale, 'random_seed': seed,
+                          'publish_tf': not filtered}], output='screen'),
     ]
+    if filtered:
+        ekf = Node(package='robot_localization', executable='ekf_node', name='ekf_filter_node',
+                   parameters=[str(est/'config/ekf.yaml'), common], output='screen')
+        nodes.extend([
+            # Neste mundo local, map e odom compartilham a origem ENU fixa.
+            Node(package='tf2_ros', executable='static_transform_publisher',
+                 arguments=['--frame-id', 'map', '--child-frame-id', 'odom'],
+                 parameters=[common], output='screen'),
+            RegisterEventHandler(OnProcessExit(
+                target_action=ekf, on_exit=after_exit([], 'O EKF encerrou com erro; '
+                '/odometry/filtered indisponivel. Confira o erro do ekf_node e suas dependencias.'))),
+            ekf,
+        ])
     def spawner(name):
         return Node(package='controller_manager', executable='spawner',
                     arguments=[name, '--controller-manager', '/controller_manager',
@@ -61,27 +87,23 @@ def build_nodes(context):
         output.mkdir(parents=True, exist_ok=False)
         (output/'run_metadata.json').write_text(json.dumps({
             'noise': noise, 'noise_scale': scale, 'seed': seed,
-            'omega': omega, 'cycles': cycles, 'pose_source': '/localization/odom',
-            'note': 'GPS+IMU direto, sem filtro; origem fixa do mundo sensors.world',
+            'omega': omega, 'cycles': cycles, 'pose_source': odom,
+            'note': 'Origem ENU fixa do mundo sensors.world; ground truth somente para avaliacao',
         }, indent=2), encoding='utf-8')
         nodes.extend([
             LogInfo(msg=f'Ensaio: {output}'),
             Node(package='robot_control', executable='ground_truth_recorder',
-                 parameters=[common, {'output_dir': str(output)}], output='screen'),
+                 parameters=[common, {'output_dir': str(output),
+                                      'record_raw_pose': filtered}], output='screen'),
         ])
         after_drive = [TimerAction(period=2.0, actions=[Node(
             package='robot_control', executable='figure_eight', name='figure_eight',
             parameters=[str(ctrl/'config/trajectory_sensors.yaml'), common,
                         {'trajectory.omega': omega, 'trajectory.cycles': cycles,
-                         'output_dir': str(output)}],
-            remappings=[('odom', '/localization/odom'), ('cmd_vel', '/cmd_vel')],
+                         'output_dir': str(output),
+                         'frame_id': 'odom' if filtered else 'map'}],
+            remappings=[('odom', odom), ('cmd_vel', '/cmd_vel')],
             output='screen')])]
-    def after_exit(next_actions):
-        def callback(event, _context):
-            if event.returncode != 0:
-                return [EmitEvent(event=Shutdown(reason='Falha ao ativar os controladores.'))]
-            return next_actions
-        return callback
     # Registrar eventos antes de iniciar spawners evita corrida de inicializacao.
     nodes.extend([
         RegisterEventHandler(OnProcessExit(target_action=joints, on_exit=after_exit([drive]))),
@@ -97,6 +119,7 @@ def build_nodes(context):
 def generate_launch_description():
     args = [
         ('task', 'eight', 'eight: experimento; sensors: inspecao/teleoperacao'),
+        ('pose_source', 'raw', 'raw: GPS+IMU direto; filtered: EKF da pratica 05'),
         ('noise', 'low', 'low ou high; zero somente para diagnostico'),
         ('seed', '42', 'Semente do Gazebo e do ruido de orientacao'),
         ('omega', '0.1', 'Frequencia angular da referencia, rad/s'),

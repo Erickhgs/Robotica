@@ -1,4 +1,4 @@
-"""Registra referencia do Gazebo para avaliacao; nao publica TF ou comandos."""
+"""Registra referencia do Gazebo e, opcionalmente, pose bruta para avaliacao."""
 import csv
 from datetime import datetime
 from pathlib import Path as FilePath
@@ -20,12 +20,33 @@ class GroundTruthRecorder(Node):
         self.stream = filename.open('x', newline='', encoding='utf-8')
         self.writer = csv.writer(self.stream)
         self.writer.writerow(['ros_time', 'x', 'y', 'yaw'])
+        self.raw_stream = None
+        self.raw_count = 0
+        if parameter(self, 'record_raw_pose', False):
+            self.raw_stream = (output/'raw_pose.csv').open('x', newline='', encoding='utf-8')
+            self.raw_writer = csv.writer(self.raw_stream)
+            self.raw_writer.writerow(['ros_time', 'x', 'y', 'yaw'])
+            self.create_subscription(Odometry, '/localization/odom', self.on_raw,
+                                     qos_profile_sensor_data)
         self.count, self.last_path = 0, -1.0
         self.path = Path()
         self.pose_pub = self.create_publisher(PoseStamped, '/evaluation/ground_truth', 10)
         self.path_pub = self.create_publisher(Path, '/evaluation/ground_truth_path', 10)
         self.create_subscription(Odometry, '/ground_truth/odom', self.on_truth, qos_profile_sensor_data)
         self.get_logger().info(f'Referencia independente: {filename}')
+
+    def on_raw(self, msg):
+        if msg.header.frame_id != 'map' or msg.child_frame_id != 'chassis':
+            return
+        try:
+            pose = to_pose(msg.pose.pose)
+        except ValueError:
+            return
+        t = msg.header.stamp.sec + msg.header.stamp.nanosec*1e-9
+        self.raw_writer.writerow([t, pose.x, pose.y, pose.yaw])
+        self.raw_count += 1
+        if self.raw_count % 20 == 0:
+            self.raw_stream.flush()
 
     def on_truth(self, msg):
         if msg.header.frame_id != 'world' or msg.child_frame_id != 'chassis':
@@ -54,6 +75,8 @@ class GroundTruthRecorder(Node):
 
     def stop(self):
         self.stream.close()
+        if self.raw_stream is not None:
+            self.raw_stream.close()
 
 
 def main(args=None):

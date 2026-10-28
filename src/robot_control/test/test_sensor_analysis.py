@@ -37,6 +37,44 @@ class SensorAnalysisTests(unittest.TestCase):
             self.assertTrue(s['complete'])
             self.assertAlmostEqual(s['mean_abs_delta_w'], .2)
             self.assertEqual(s['coverage_percent'], 100)
+            with (p/'raw_pose.csv').open('w', newline='') as f:
+                w = csv.writer(f); w.writerow(['ros_time', 'x', 'y', 'yaw'])
+                w.writerow([1.01, .3, .4, .2])
+                w.writerow([1.03, .6, .8, .4])
+            s = summarize_trial(p)
+            self.assertEqual(s['rmse_estimation_m'], 5)
+            self.assertAlmostEqual(s['rmse_raw_m'], math.sqrt((.5**2+1)/2))
+            self.assertAlmostEqual(s['rmse_raw_yaw_rad'], math.sqrt((.2**2+.4**2)/2))
+            self.assertEqual(s['rmse_filtered_yaw_rad'], 0)
+            with (p/'comparison.csv').open() as f:
+                rows = list(csv.DictReader(f))
+            self.assertEqual(float(rows[0]['x_raw']), .3)
+            self.assertEqual(float(rows[1]['x_raw']), .6)
+            self.assertEqual(float(rows[0]['raw_ros_time']), 1.01)
+            self.assertEqual(float(rows[0]['x_true']), 0)
+            # Mesmo GPS pode ter mais de uma pose; usar a ultima sem fazer media.
+            with (p/'raw_pose.csv').open('w', newline='') as f:
+                w = csv.writer(f); w.writerow(['ros_time', 'x', 'y', 'yaw'])
+                w.writerow([1.01, .3, .4, -.5])
+                w.writerow([1.01, .3, .4, .2])
+                w.writerow([1.03, .6, .8, -.7])
+                w.writerow([1.03, .6, .8, .4])
+            repeated = summarize_trial(p)
+            self.assertEqual(repeated, s)
+            with (p/'comparison.csv').open() as f:
+                repeated_rows = list(csv.DictReader(f))
+            self.assertEqual(repeated_rows, rows)
+            with (p/'raw_pose.csv').open('a', newline='') as f:
+                csv.writer(f).writerow([1.02, .3, .4, .2])
+            with self.assertRaisesRegex(ValueError, 'fora de ordem'):
+                summarize_trial(p)
+            # Nao usar uma leitura futura nem antiga quando falta sensor recente.
+            for time in (2, .5):
+                with (p/'raw_pose.csv').open('w', newline='') as f:
+                    w = csv.writer(f); w.writerow(['ros_time', 'x', 'y', 'yaw'])
+                    w.writerow([time, 0, 0, 0])
+                with self.assertRaisesRegex(ValueError, 'insuficientes'):
+                    summarize_trial(p)
 
 
 if __name__ == '__main__':

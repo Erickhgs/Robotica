@@ -64,7 +64,7 @@ Visualization Manager:
       Color: 70; 220; 100
       Line Style: Lines
     - Class: rviz_default_plugins/Path
-      Name: Pose GPS e IMU
+      Name: Pose usada no controle
       Enabled: true
       Topic:
         Value: /tracking/actual_path

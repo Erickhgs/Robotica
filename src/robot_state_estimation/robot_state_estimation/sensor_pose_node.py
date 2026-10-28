@@ -28,6 +28,7 @@ class SensorPose(Node):
             'noise_scale': 1.0, 'yaw_noise_stddev': 0.01, 'random_seed': 42,
             'max_sensor_age': 0.3, 'max_sensor_skew': 0.10,
             'base_height': 0.1,
+            'publish_tf': True,
         }
         for key, value in defaults.items():
             self.declare_parameter(key, value)
@@ -48,7 +49,7 @@ class SensorPose(Node):
         self.yaw_pub = self.create_publisher(Float64, '/imu/yaw', 10)
         self.enu_pub = self.create_publisher(PointStamped, '/gps/enu', 10)
         self.odom_pub = self.create_publisher(Odometry, '/localization/odom', 10)
-        self.tf = TransformBroadcaster(self)
+        self.tf = TransformBroadcaster(self) if p('publish_tf') else None
         self.create_subscription(Imu, '/imu/raw', self.on_imu, qos_profile_sensor_data)
         self.create_subscription(NavSatFix, '/gps/fix', self.on_gps, qos_profile_sensor_data)
         # DDS pode entregar o sensor antes do /clock correspondente. Processar
@@ -132,7 +133,8 @@ class SensorPose(Node):
         transform.transform.translation.x, transform.transform.translation.y = x, y
         transform.transform.translation.z = self.height
         transform.transform.rotation = odom.pose.pose.orientation
-        self.tf.sendTransform(transform)
+        if self.tf is not None:
+            self.tf.sendTransform(transform)
 
 
 def main(args=None):

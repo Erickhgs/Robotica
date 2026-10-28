@@ -1,6 +1,9 @@
 import ast
+import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
 import yaml
@@ -10,6 +13,20 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class PackageTests(unittest.TestCase):
+    def test_failed_ekf_requests_shutdown_instead_of_continuing_without_pose(self):
+        path = ROOT/'launch/pratica04.launch.py'
+        spec = importlib.util.spec_from_file_location('pratica04_launch', path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        reason = '/odometry/filtered indisponivel'
+        callback = module.after_exit([], reason)
+        self.assertEqual(callback(SimpleNamespace(returncode=0), None), [])
+        with patch.object(module, 'LogInfo'):
+            actions = callback(SimpleNamespace(returncode=127), None)
+        self.assertIsInstance(actions[-1], module.EmitEvent)
+        self.assertIsInstance(actions[-1].event, module.Shutdown)
+        self.assertEqual(actions[-1].event.reason, reason)
+
     def test_python_310_syntax(self):
         for path in ROOT.rglob('*.py'):
             ast.parse(path.read_text(encoding='utf-8'), filename=str(path), feature_version=(3, 10))

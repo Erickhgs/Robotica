@@ -1,6 +1,6 @@
-"""Compara a pose usada no controle com a verdade do Gazebo por tempo ROS."""
+"""Compara pose de controle, sensores brutos e verdade do Gazebo por tempo ROS."""
 import argparse
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 import csv
 import json
 import math
@@ -39,6 +39,16 @@ def summarize_trial(directory):
     if any(b <= a for a, b in zip(times, times[1:])):
         raise ValueError(f'{directory}: relogio reiniciado ou duplicado; inicie um novo ensaio.')
     points = [tuple(float(r[k]) for k in ('x', 'y', 'yaw')) for r in ground]
+    raw_path = directory/'raw_pose.csv'
+    has_raw = raw_path.exists()
+    raw_times, raw_points = [], []
+    if has_raw:
+        with raw_path.open(newline='') as stream:
+            raw = list(csv.DictReader(stream))
+        raw_times = [float(r['ros_time']) for r in raw]
+        if any(b < a for a, b in zip(raw_times, raw_times[1:])):
+            raise ValueError(f'{directory}: timestamps brutos fora de ordem; inicie um novo ensaio.')
+        raw_points = [tuple(float(r[k]) for k in ('x', 'y', 'yaw')) for r in raw]
     rows = []
     for row in control:
         if row['phase'] != 'run':
@@ -46,6 +56,13 @@ def summarize_trial(directory):
         truth = interpolate_truth(times, points, float(row['ros_time']))
         if truth is None:
             continue
+        measured = None
+        if has_raw:
+            # bisect_right escolhe a ultima pose tambem quando o timestamp se repete.
+            i = bisect_right(raw_times, float(row['ros_time']))-1
+            if i < 0 or float(row['ros_time'])-raw_times[i] > 0.1:
+                continue
+            measured = raw_points[i]
         tx, ty, tyaw = truth
         r = {k: float(row[k]) for k in ('ros_time','time','x_ref','y_ref','yaw_ref',
                                        'x','y','yaw','v_command','w_command','saturated')}
@@ -53,6 +70,16 @@ def summarize_trial(directory):
                  tracking_error_true=math.hypot(tx-r['x_ref'], ty-r['y_ref']),
                  estimation_error=math.hypot(tx-r['x'], ty-r['y']),
                  yaw_error_true=wrap(tyaw-r['yaw_ref']))
+        if measured is not None:
+            # O RMSE bruto usa ground truth no timestamp do proprio sensor.
+            raw_truth = interpolate_truth(times, points, raw_times[i])
+            if raw_truth is None:
+                continue
+            rx, ry, ryaw = measured
+            r.update(raw_ros_time=raw_times[i], x_raw=rx, y_raw=ry, yaw_raw=ryaw,
+                     raw_estimation_error=math.hypot(rx-raw_truth[0], ry-raw_truth[1]),
+                     raw_yaw_error=wrap(ryaw-raw_truth[2]),
+                     filtered_yaw_error=wrap(r['yaw']-tyaw))
         rows.append(r)
     if len(rows) < 2:
         raise ValueError(f'{directory}: amostras sincronizadas insuficientes.')
@@ -75,6 +102,10 @@ def summarize_trial(directory):
         'mean_abs_delta_w': variation('w_command'),
         'saturation_percent': 100*sum(r['saturated'] for r in rows)/len(rows),
     }
+    if has_raw:
+        result.update(rmse_raw_m=rmse('raw_estimation_error'),
+                      rmse_raw_yaw_rad=rmse('raw_yaw_error'),
+                      rmse_filtered_yaw_rad=rmse('filtered_yaw_error'))
     with (directory/'comparison.csv').open('w', newline='') as stream:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
         writer.writeheader(); writer.writerows(rows)
@@ -82,7 +113,7 @@ def summarize_trial(directory):
 
 
 def main(args=None):
-    parser = argparse.ArgumentParser(description='Avaliar pratica 04 com ground truth independente')
+    parser = argparse.ArgumentParser(description='Avaliar praticas 04/05 com ground truth independente')
     parser.add_argument('directories', nargs='+', type=Path, help='Pastas de ensaios, ou raiz que as contem.')
     parser.add_argument('--output', type=Path, help='Tabela-resumo CSV para comparar os ensaios.')
     opts = parser.parse_args(args)
@@ -100,7 +131,8 @@ def main(args=None):
     if opts.output:
         opts.output.parent.mkdir(parents=True, exist_ok=True)
         with opts.output.open('w', newline='') as stream:
-            writer = csv.DictWriter(stream, fieldnames=list(results[0]))
+            fields = list(dict.fromkeys(key for result in results for key in result))
+            writer = csv.DictWriter(stream, fieldnames=fields)
             writer.writeheader(); writer.writerows(results)
 
 
